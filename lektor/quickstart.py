@@ -3,6 +3,7 @@ import re
 import uuid
 import click
 import shutil
+import binascii
 import tempfile
 import subprocess
 from datetime import datetime
@@ -10,6 +11,9 @@ from functools import partial
 from contextlib import contextmanager
 from jinja2 import Environment, PackageLoader
 
+from .admin import WebAdmin
+from .environment import Environment as LektorEnvironment
+from .project import Project
 from .utils import slugify, fs_enc
 
 
@@ -189,6 +193,18 @@ def project_quickstart(defaults=None):
         'Your name.  This is used in a few places in the default template '
         'to refer to in the default copyright messages.')
 
+    with_database = g.prompt('Database', False,
+        'If deploying your admin panel to the web, you will need a database to'
+        ' store users. Note: you must have the optional "webadmin" '
+        'dependencies installed, i.e., `pip install lektor[webadmin]`.')
+    if with_database:
+        default_db_path = os.path.abspath(os.path.join(path, 'lektor.db'))
+        default_db_uri = 'sqlite:///' + default_db_path
+        database_uri = g.prompt('Database URI', default_db_uri)
+
+        username = g.prompt('Username')
+        password = g.prompt('Password')
+
     g.confirm('That\'s all. Create project?')
 
     g.run({
@@ -199,7 +215,25 @@ def project_quickstart(defaults=None):
         'this_year': datetime.utcnow().year,
         'today': datetime.utcnow().strftime('%Y-%m-%d'),
         'author_name': author_name,
+        'database_uri': database_uri if with_database else '',
+        'secret_key': binascii.hexlify(os.urandom(24)),
     }, path)
+
+    if with_database:
+        project = Project.from_path(path)
+        env = LektorEnvironment(project, load_plugins=False)
+
+        app = WebAdmin(env, output_path=path)
+        app.config['SQLALCHEMY_DATABASE_URI'] = database_uri
+
+        with app.app_context():
+            from lektor.admin.models import db, User
+
+            db.create_all()
+            admin = User(username, password)
+
+            db.session.add(admin)
+            db.session.commit()
 
 
 def plugin_quickstart(defaults=None, project=None):
