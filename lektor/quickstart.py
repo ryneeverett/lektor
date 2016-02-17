@@ -202,8 +202,8 @@ def project_quickstart(defaults=None):
         default_db_uri = 'sqlite:///' + default_db_path
         database_uri = g.prompt('Database URI', default_db_uri)
 
-        username = g.prompt('Username')
-        password = g.prompt('Password')
+        username = g.prompt('Admin Username')
+        password = g.prompt('Admin Password')
 
     g.confirm('That\'s all. Create project?')
 
@@ -230,10 +230,9 @@ def project_quickstart(defaults=None):
             from lektor.admin.models import db, User
 
             db.create_all()
-            admin = User(username, password)
-
-            db.session.add(admin)
-            db.session.commit()
+            user = User(username)
+            user.set_password(password)
+            user.save()
 
 
 def plugin_quickstart(defaults=None, project=None):
