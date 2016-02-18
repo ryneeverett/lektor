@@ -104,3 +104,8 @@ if getattr(project, 'database_uri', False):
                 user.save()
                 return redirect(url_for('login'))
             return flask.render_template('set_password.html', form=form)
+
+        @app.route('/users')
+        def users():
+            users = [user.username for user in User.query.all()]
+            return flask.render_template('users.html', users=users)

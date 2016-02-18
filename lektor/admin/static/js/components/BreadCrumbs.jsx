@@ -81,6 +81,10 @@ class BreadCrumbs extends RecordComponent {
     });
   }
 
+  _onUsers(e) {
+    window.location = utils.getCanonicalUrl('/users');
+  }
+
   _onFindFiles(e) {
     dialogSystem.showDialog(FindFiles);
   }
@@ -93,9 +97,19 @@ class BreadCrumbs extends RecordComponent {
     dialogSystem.showDialog(Publish);
   }
 
+  renderUsers() {
+    // TODO only return if user is admin.
+    return (
+      <button className="btn btn-default" onClick={
+        this._onUsers.bind(this)} title={i18n.trans('USERS')}>
+        <i className="fa fa-users fa-fw"></i></button>
+    );
+  }
+
   renderGlobalActions() {
     return (
       <div className="btn-group">
+        {this.renderUsers()}
         <button className="btn btn-default" onClick={
           this._onFindFiles.bind(this)} title={i18n.trans('FIND_FILES')}>
           <i className="fa fa-search fa-fw"></i></button>

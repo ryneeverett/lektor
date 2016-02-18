@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block body %}
+<h1>Users</h1>
+<a href="/add-user"><span class="fa fa-user-plus fa-fw"></span>Add a user</a>
+<table>
+  <tr><th>Username</th></tr>
+  {% for user in users %}
+    <tr><td>{{ user }}<td></tr>
+  {% endfor %}
+</table>
+{% endblock %}
