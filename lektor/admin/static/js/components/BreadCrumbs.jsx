@@ -81,10 +81,6 @@ class BreadCrumbs extends RecordComponent {
     });
   }
 
-  _onUsers(e) {
-    window.location = utils.getCanonicalUrl('/users');
-  }
-
   _onFindFiles(e) {
     dialogSystem.showDialog(FindFiles);
   }
@@ -97,8 +93,25 @@ class BreadCrumbs extends RecordComponent {
     dialogSystem.showDialog(Publish);
   }
 
+  _onUsers(e) {
+    window.location = utils.getCanonicalUrl('/users');
+  }
+
+  _onLogout(e) {
+    window.location = utils.getCanonicalUrl('/logout');
+  }
+
   renderUsers() {
     // TODO only return if user is admin.
+    return (
+      <button className="btn btn-default" onClick={
+        this._onLogout.bind(this)} title={i18n.trans('LOG_OUT')}>
+        <i className="fa fa-sign-out fa-fw"></i></button>
+    );
+  }
+
+  renderLogout() {
+    // TODO only return if database enabled.
     return (
       <button className="btn btn-default" onClick={
         this._onUsers.bind(this)} title={i18n.trans('USERS')}>
@@ -109,7 +122,6 @@ class BreadCrumbs extends RecordComponent {
   renderGlobalActions() {
     return (
       <div className="btn-group">
-        {this.renderUsers()}
         <button className="btn btn-default" onClick={
           this._onFindFiles.bind(this)} title={i18n.trans('FIND_FILES')}>
           <i className="fa fa-search fa-fw"></i></button>
@@ -122,6 +134,8 @@ class BreadCrumbs extends RecordComponent {
         <button className="btn btn-default" onClick={
           this._onCloseClick.bind(this)} title={i18n.trans('RETURN_TO_WEBSITE')}>
           <i className="fa fa-eye fa-fw"></i></button>
+        {this.renderUsers()}
+        {this.renderLogout()}
       </div>
     );
   }
