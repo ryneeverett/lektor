@@ -82,11 +82,13 @@ if getattr(project, 'database_uri', False):
                 user.save()
                 return redirect(url_for(
                     'set_password_link',
-                    username=user.username, tmp_token=tmp_token))
+                    username=user.username,
+                    tmp_token=tmp_token,
+                    new_user=True))
             return flask.render_template('add_user.html', form=form)
 
-        @app.route('/set_password_link/<username>/<tmp_token>')
-        def set_password_link(username, tmp_token):
+        @app.route('/set_password_link/<username>/<tmp_token>/<new_user>')
+        def set_password_link(username, tmp_token, new_user):
             link = url_for('set_password', tmp_token=tmp_token, _external=True)
             return flask.render_template(
                 'set_password_link.html', link=link, username=username)
@@ -109,3 +111,20 @@ if getattr(project, 'database_uri', False):
         def users():
             users = [user.username for user in User.query.all()]
             return flask.render_template('users.html', users=users)
+
+        @app.route('/delete-user/<username>')
+        def delete_user(username):
+            user = User.get(username=username)
+            if user.id != 1:
+                user.delete()
+            return flask.redirect(url_for('users'))
+
+        @app.route('/reset-user/<username>')
+        def reset_user(username):
+            user = User.get(username=username)
+            user.unset_password()
+            tmp_token = user.make_tmp_token()
+            user.save()
+            return redirect(url_for(
+                'set_password_link',
+                username=username, tmp_token=tmp_token, new_user=False))

@@ -6,7 +6,11 @@
 <table>
   <tr><th>Username</th></tr>
   {% for user in users %}
-    <tr><td>{{ user }}<td></tr>
+    <tr>
+      <td>{{ user }}<td>
+        <td><a href="/delete-user/{{ user }}"><span title="Delete" class="fa fa-ban fa-fw"></span></a></td>
+        <td><a href="/reset-user/{{ user }}"><span title="Reset Password" class="fa fa-unlock-alt fa-fw"></span></a></td>
+    </tr>
   {% endfor %}
 </table>
 {% endblock %}

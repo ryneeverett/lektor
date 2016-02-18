@@ -19,6 +19,9 @@ class User(db.Model, UserMixin):
         self.tmp_token = ''
         self.pw_hash = generate_password_hash(password)
 
+    def unset_password(self):
+        self.pw_hash = ''
+
     def check_password(self, password):
         return check_password_hash(
             self.pw_hash, password) if self.pw_hash else False
@@ -33,4 +36,8 @@ class User(db.Model, UserMixin):
 
     def save(self):
         db.session.add(self)
+        db.session.commit()
+
+    def delete(self):
+        db.session.delete(self)
         db.session.commit()
