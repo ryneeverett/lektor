@@ -20,7 +20,8 @@ class User(db.Model, UserMixin):
         self.pw_hash = generate_password_hash(password)
 
     def check_password(self, password):
-        return check_password_hash(self.pw_hash, password)
+        return check_password_hash(
+            self.pw_hash, password) if self.pw_hash else False
 
     @classmethod
     def get(cls, **kwargs):

@@ -103,4 +103,4 @@ if getattr(project, 'database_uri', False):
                 user.set_password(form.password.data)
                 user.save()
                 return redirect(url_for('login'))
-            return flask.render_template('login.html', form=form)
+            return flask.render_template('set_password.html', form=form)
