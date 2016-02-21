@@ -4,9 +4,11 @@ from flask import Blueprint, g, request, current_app, url_for
 from werkzeug.utils import cached_property
 
 from lektor.db import Tree
+from lektor.project import Project
 
 
 bp = Blueprint('common', __name__)
+project = Project.discover()
 
 
 class AdminContext(object):
@@ -15,6 +17,7 @@ class AdminContext(object):
         self.admin_root = url_for('dash.index').rstrip('/')
         self.site_root = request.script_root
         self.info = current_app.lektor_info
+        self.is_database = bool(project.database_uri)
 
     def get_temp_path(self, name=None):
         if name is None:

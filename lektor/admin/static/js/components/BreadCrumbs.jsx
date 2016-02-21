@@ -102,21 +102,23 @@ class BreadCrumbs extends RecordComponent {
   }
 
   renderUsers() {
-    // TODO only return if user is admin.
-    return (
-      <button className="btn btn-default" onClick={
-        this._onLogout.bind(this)} title={i18n.trans('LOG_OUT')}>
-        <i className="fa fa-sign-out fa-fw"></i></button>
-    );
+    if (true) {  // XXX
+      return (
+        <button className="btn btn-default" onClick={
+          this._onUsers.bind(this)} title={i18n.trans('USERS')}>
+          <i className="fa fa-users fa-fw"></i></button>
+      );
+    }
   }
 
   renderLogout() {
-    // TODO only return if database enabled.
-    return (
-      <button className="btn btn-default" onClick={
-        this._onUsers.bind(this)} title={i18n.trans('USERS')}>
-        <i className="fa fa-users fa-fw"></i></button>
-    );
+    if ($LEKTOR_CONFIG.is_database) {
+      return (
+        <button className="btn btn-default" onClick={
+          this._onLogout.bind(this)} title={i18n.trans('LOG_OUT')}>
+          <i className="fa fa-sign-out fa-fw"></i></button>
+      );
+    }
   }
 
   renderGlobalActions() {

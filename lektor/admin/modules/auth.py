@@ -8,7 +8,7 @@ bp = Blueprint('auth', __name__)
 
 project = Project.discover()
 
-if getattr(project, 'database_uri', False):
+if project.database_uri:
     @bp.record_once
     def init(state):
         from flask.ext import login
