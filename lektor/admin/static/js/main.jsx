@@ -43,6 +43,8 @@ var routes = (function() {
   var PreviewPage = require('./views/PreviewPage');
   var AddChildPage = require('./views/AddChildPage');
   var AddAttachmentPage = require('./views/AddAttachmentPage');
+  var UsersPage = require('./views/UsersPage');
+  var AddUserPage = require('./views/AddUserPage');
 
   // route setup
   return (
@@ -52,6 +54,8 @@ var routes = (function() {
       <Route name="preview" path=":path/preview" component={PreviewPage}/>
       <Route name="add-child" path=":path/add-child" component={AddChildPage}/>
       <Route name="upload" path=":path/upload" component={AddAttachmentPage}/>
+      <Route name="users" path="users" component={UsersPage}/>
+      <Route name="add-user" path="add-user" component={AddUserPage}/>
       <IndexRoute component={Dash}/>
       <route path="*" component={BadRoute}/>
     </Route>

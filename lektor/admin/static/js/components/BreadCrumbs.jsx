@@ -94,7 +94,7 @@ class BreadCrumbs extends RecordComponent {
   }
 
   _onUsers(e) {
-    window.location = utils.getCanonicalUrl('/users');
+    this.props.history.pushState(null, '/admin/users');
   }
 
   _onLogout(e) {

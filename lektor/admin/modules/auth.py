@@ -68,24 +68,21 @@ if project.database_uri:
             logout_user()
             return redirect(g.admin_context.admin_root)
 
-        @app.route('/add-user', methods=['GET', 'POST'])
+        @app.route('/add-user', methods=['POST'])
         def add_user():
+            from flask import request
             from flask.ext.login import current_user
 
             if current_user.id != 1:
                 return login_manager.unauthorized()
 
-            form = NewUserForm()
-            if form.validate_on_submit():
-                user = User(form.username.data)
-                tmp_token = user.make_tmp_token()
-                user.save()
-                return redirect(url_for(
-                    'set_password_link',
-                    username=user.username,
-                    tmp_token=tmp_token,
-                    new_user=True))
-            return flask.render_template('add_user.html', form=form)
+            username = request.get_json()['username']
+
+            user = User(username)
+            tmp_token = user.make_tmp_token()
+            user.save()
+
+            return flask.jsonify(tmp_token=tmp_token)
 
         @app.route('/set_password_link/<username>/<tmp_token>/<new_user>')
         def set_password_link(username, tmp_token, new_user):
@@ -110,14 +107,14 @@ if project.database_uri:
         @app.route('/users')
         def users():
             users = [user.username for user in User.query.all()]
-            return flask.render_template('users.html', users=users)
+            return flask.jsonify(users=users)
 
         @app.route('/delete-user/<username>')
         def delete_user(username):
             user = User.get(username=username)
             if user.id != 1:
                 user.delete()
-            return flask.redirect(url_for('users'))
+            return ''
 
         @app.route('/reset-user/<username>')
         def reset_user(username):
@@ -125,6 +122,4 @@ if project.database_uri:
             user.unset_password()
             tmp_token = user.make_tmp_token()
             user.save()
-            return redirect(url_for(
-                'set_password_link',
-                username=username, tmp_token=tmp_token, new_user=False))
+            return flask.jsonify(tmp_token=tmp_token)
