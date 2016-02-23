@@ -45,6 +45,7 @@ var routes = (function() {
   var AddAttachmentPage = require('./views/AddAttachmentPage');
   var UsersPage = require('./views/UsersPage');
   var AddUserPage = require('./views/AddUserPage');
+  var SetPasswordLinkPage = require('./views/SetPasswordLinkPage');
 
   // route setup
   return (
@@ -56,6 +57,7 @@ var routes = (function() {
       <Route name="upload" path=":path/upload" component={AddAttachmentPage}/>
       <Route name="users" path="users" component={UsersPage}/>
       <Route name="add-user" path="add-user" component={AddUserPage}/>
+      <Route name="set-password-link" path="set-password-link" component={SetPasswordLinkPage}/>
       <IndexRoute component={Dash}/>
       <route path="*" component={BadRoute}/>
     </Route>

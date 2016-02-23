@@ -8,7 +8,7 @@ var Link = require('../components/Link');
 
 var utils = require('../utils');
 
-class Users extends Component {
+class UsersPage extends Component {
   constructor(props) {
     super(props);
 
@@ -39,13 +39,15 @@ class Users extends Component {
 
   onResetPassword(e) {
     var username = e.target.dataset.username || e.target.parentElement.dataset.username;
+
     utils.request('/reset-user/' + username)
     .then((resp) => {
-      window.location = utils.getCanonicalUrl('/set_password_link/' + username + '/' + resp.tmp_token + '/False');
+      this.props.history.pushState(
+        null, '/admin/set-password-link', {username: username, link: resp.link, new_user: false});
     });
   }
 
-  render() {
+  renderUsers() {
     var users = this.state.data.users.map((user, i) => {
       return (
         <tr key={i}>
@@ -71,9 +73,7 @@ class Users extends Component {
     </table>
     );
   }
-}
 
-class UsersPage extends Component {
   render() {
     return (
       <div>
@@ -81,7 +81,7 @@ class UsersPage extends Component {
         <Link to="/admin/add-user">
           <span className="fa fa-user-plus fa-fw"></span>Add a user
         </Link>
-        <Users/>
+        {this.renderUsers()}
       </div>
     );
   }

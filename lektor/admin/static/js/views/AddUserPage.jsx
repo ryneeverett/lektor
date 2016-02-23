@@ -20,7 +20,8 @@ class AddUserPage extends Component {
       json: {username: username},
       method: 'POST'
     }).then((resp) => {
-      window.location = utils.getCanonicalUrl('/set_password_link/' + username + '/' + resp.tmp_token + '/True');
+      this.props.history.pushState(
+        null, '/admin/set-password-link', {username: username, link: resp.link, new_user: true});
     });
 
   }
@@ -29,7 +30,7 @@ class AddUserPage extends Component {
     return (
       <div>
         <h1>Add a User</h1>
-        <form onSubmit={this.handleSubmit}>
+        <form onSubmit={this.handleSubmit.bind(this)}>
           <p>Username <input type="text" name="username"/></p>
           <input type="submit" value="Post" />
         </form>

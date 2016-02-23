@@ -82,13 +82,10 @@ if project.database_uri:
             tmp_token = user.make_tmp_token()
             user.save()
 
-            return flask.jsonify(tmp_token=tmp_token)
+            return flask.jsonify(link=set_password_link(tmp_token))
 
-        @app.route('/set_password_link/<username>/<tmp_token>/<new_user>')
-        def set_password_link(username, tmp_token, new_user):
-            link = url_for('set_password', tmp_token=tmp_token, _external=True)
-            return flask.render_template(
-                'set_password_link.html', link=link, username=username)
+        def set_password_link(tmp_token):
+            return url_for('set_password', tmp_token=tmp_token, _external=True)
 
         @app.route('/set_password/<tmp_token>', methods=['GET', 'POST'])
         def set_password(tmp_token):
@@ -122,4 +119,4 @@ if project.database_uri:
             user.unset_password()
             tmp_token = user.make_tmp_token()
             user.save()
-            return flask.jsonify(tmp_token=tmp_token)
+            return flask.jsonify(link=set_password_link(tmp_token))
