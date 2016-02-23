@@ -127,17 +127,21 @@ if project.database_uri:
 
         return flask.jsonify(link=set_password_link(tmp_token))
 
-    @bp.route('/delete/<username>')
+    @bp.route('/delete', methods=['POST'])
     @admin_required
-    def delete_user(username):
+    def delete_user():
+        username = request.get_json()['username']
+
         user = User.get(username=username)
         if user.id != 1:
             user.delete()
         return ''
 
-    @bp.route('/reset/<username>')
+    @bp.route('/reset', methods=['POST'])
     @admin_required
-    def reset_user(username):
+    def reset_user():
+        username = request.get_json()['username']
+
         user = User.get(username=username)
         user.unset_password()
         tmp_token = user.make_tmp_token()
