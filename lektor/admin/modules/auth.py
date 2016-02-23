@@ -1,7 +1,7 @@
 import functools
 
 import flask
-from flask import Blueprint, g, redirect, url_for, current_app
+from flask import Blueprint, g, redirect, url_for, current_app, request
 
 from lektor.project import Project
 
@@ -28,7 +28,10 @@ if project.database_uri:
     @bp.record_once
     def init(state):
         from flask.ext import login
-        from flask.ext.login import login_user, logout_user
+        from flask.ext.login import login_user, logout_user, current_user
+
+        from flask.ext.wtf import Form
+        from wtforms import StringField, PasswordField, SubmitField
 
         app = state.app
 
@@ -45,9 +48,6 @@ if project.database_uri:
         def load_user(user_id):
             return User.get(id=user_id)
 
-        from flask.ext.wtf import Form
-        from wtforms import StringField, PasswordField, SubmitField
-
         class LoginForm(Form):
             username = StringField('username')
             password = PasswordField('password')
@@ -63,9 +63,6 @@ if project.database_uri:
 
         @app.before_request
         def require_authorization():
-            from flask import request
-            from flask.ext.login import current_user
-
             if not (current_user.is_authenticated or
                     request.endpoint in ['login', 'set_password']):
                 return login_manager.unauthorized()
@@ -87,8 +84,6 @@ if project.database_uri:
         @app.route('/add-user', methods=['POST'])
         @admin_required
         def add_user():
-            from flask import request
-
             username = request.get_json()['username']
 
             user = User(username)
