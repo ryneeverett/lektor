@@ -25,17 +25,19 @@ def admin_required(func):
     return decorated_view
 
 if project.database_uri:
+    from flask.ext.login import login_user, logout_user, current_user
+
+    from flask.ext.wtf import Form
+    from wtforms import StringField, PasswordField, SubmitField
+
     @bp.record_once
     def init(state):
         from flask.ext import login
-        from flask.ext.login import login_user, logout_user, current_user
-
-        from flask.ext.wtf import Form
-        from wtforms import StringField, PasswordField, SubmitField
 
         app = state.app
 
         with app.app_context():
+            global User
             from lektor.admin.models import User
 
         app.config['SQLALCHEMY_DATABASE_URI'] = project.database_uri
@@ -54,87 +56,87 @@ if project.database_uri:
         def load_user(user_id):
             return User.get(id=user_id)
 
-        class LoginForm(Form):
-            username = StringField('username')
-            password = PasswordField('password')
-            submit = SubmitField('login')
+    class LoginForm(Form):
+        username = StringField('username')
+        password = PasswordField('password')
+        submit = SubmitField('login')
 
-            def validate(self):
-                user = User.get(username=self.username.data)
-                return user and user.check_password(self.password.data)
+        def validate(self):
+            user = User.get(username=self.username.data)
+            return user and user.check_password(self.password.data)
 
-        class NewUserForm(Form):
-            username = StringField('username')
-            submit = SubmitField('submit')
+    class NewUserForm(Form):
+        username = StringField('username')
+        submit = SubmitField('submit')
 
-        @bp.route('/login', methods=['GET', 'POST'])
-        def login():
-            form = LoginForm()
-            if form.validate_on_submit():
-                logged_in = login_user(User.get(username=form.username.data))
-                return (redirect(g.admin_context.admin_root)
-                        if logged_in else redirect(url_for('users.login')))
-            else:
-                logout_user()
-            return flask.render_template('login.html', form=form)
-
-        @bp.route('/logout')
-        def logout():
+    @bp.route('/login', methods=['GET', 'POST'])
+    def login():
+        form = LoginForm()
+        if form.validate_on_submit():
+            logged_in = login_user(User.get(username=form.username.data))
+            return (redirect(g.admin_context.admin_root)
+                    if logged_in else redirect(url_for('users.login')))
+        else:
             logout_user()
+        return flask.render_template('login.html', form=form)
+
+    @bp.route('/logout')
+    def logout():
+        logout_user()
+        return redirect(url_for('users.login'))
+
+    @bp.route('/add', methods=['POST'])
+    @admin_required
+    def add_user():
+        username = request.get_json()['username']
+
+        user = User(username)
+        tmp_token = user.make_tmp_token()
+        user.save()
+
+        return flask.jsonify(link=set_password_link(tmp_token))
+
+    def set_password_link(tmp_token):
+        return url_for(
+            'users.set_password', tmp_token=tmp_token, _external=True)
+
+    @bp.route('/set_password/<tmp_token>', methods=['GET', 'POST'])
+    def set_password(tmp_token):
+        user = User.get(tmp_token=tmp_token)
+
+        if not user or user.pw_hash:
+            return current_app.login_manager.unauthorized()
+
+        form = LoginForm(username=user.username)
+        if form.is_submitted() and form.username.data == user.username:
+            user.set_password(form.password.data)
+            user.save()
             return redirect(url_for('users.login'))
+        return flask.render_template('set_password.html', form=form)
 
-        @bp.route('/add', methods=['POST'])
-        @admin_required
-        def add_user():
-            username = request.get_json()['username']
+    @bp.route('/')
+    @admin_required
+    def users():
+        users = [user.username for user in User.query.all()]
+        return flask.jsonify(users=users)
 
-            user = User(username)
-            tmp_token = user.make_tmp_token()
-            user.save()
+    @bp.route('/delete/<username>')
+    @admin_required
+    def delete_user(username):
+        user = User.get(username=username)
+        if user.id != 1:
+            user.delete()
+        return ''
 
-            return flask.jsonify(link=set_password_link(tmp_token))
+    @bp.route('/reset/<username>')
+    @admin_required
+    def reset_user(username):
+        user = User.get(username=username)
+        user.unset_password()
+        tmp_token = user.make_tmp_token()
+        user.save()
+        return flask.jsonify(link=set_password_link(tmp_token))
 
-        def set_password_link(tmp_token):
-            return url_for(
-                'users.set_password', tmp_token=tmp_token, _external=True)
-
-        @bp.route('/set_password/<tmp_token>', methods=['GET', 'POST'])
-        def set_password(tmp_token):
-            user = User.get(tmp_token=tmp_token)
-
-            if not user or user.pw_hash:
-                return login_manager.unauthorized()
-
-            form = LoginForm(username=user.username)
-            if form.is_submitted() and form.username.data == user.username:
-                user.set_password(form.password.data)
-                user.save()
-                return redirect(url_for('users.login'))
-            return flask.render_template('set_password.html', form=form)
-
-        @bp.route('/')
-        @admin_required
-        def users():
-            users = [user.username for user in User.query.all()]
-            return flask.jsonify(users=users)
-
-        @bp.route('/delete/<username>')
-        @admin_required
-        def delete_user(username):
-            user = User.get(username=username)
-            if user.id != 1:
-                user.delete()
-            return ''
-
-        @bp.route('/reset/<username>')
-        @admin_required
-        def reset_user(username):
-            user = User.get(username=username)
-            user.unset_password()
-            tmp_token = user.make_tmp_token()
-            user.save()
-            return flask.jsonify(link=set_password_link(tmp_token))
-
-        @bp.route('/is_admin')
-        def is_admin():
-            return flask.jsonify(is_admin=_is_admin())
+    @bp.route('/is_admin')
+    def is_admin():
+        return flask.jsonify(is_admin=_is_admin())
