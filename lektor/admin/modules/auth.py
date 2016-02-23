@@ -24,6 +24,10 @@ def admin_required(func):
         return func(*args, **kwargs)
     return decorated_view
 
+
+def set_password_link(tmp_token):
+    return url_for('users.set_password', tmp_token=tmp_token, _external=True)
+
 if project.database_uri:
     from flask.ext.login import login_user, logout_user, current_user
 
@@ -69,6 +73,7 @@ if project.database_uri:
         username = StringField('username')
         submit = SubmitField('submit')
 
+    # Public views.
     @bp.route('/login', methods=['GET', 'POST'])
     def login():
         form = LoginForm()
@@ -79,26 +84,6 @@ if project.database_uri:
         else:
             logout_user()
         return flask.render_template('login.html', form=form)
-
-    @bp.route('/logout')
-    def logout():
-        logout_user()
-        return redirect(url_for('users.login'))
-
-    @bp.route('/add', methods=['POST'])
-    @admin_required
-    def add_user():
-        username = request.get_json()['username']
-
-        user = User(username)
-        tmp_token = user.make_tmp_token()
-        user.save()
-
-        return flask.jsonify(link=set_password_link(tmp_token))
-
-    def set_password_link(tmp_token):
-        return url_for(
-            'users.set_password', tmp_token=tmp_token, _external=True)
 
     @bp.route('/set_password/<tmp_token>', methods=['GET', 'POST'])
     def set_password(tmp_token):
@@ -114,11 +99,33 @@ if project.database_uri:
             return redirect(url_for('users.login'))
         return flask.render_template('set_password.html', form=form)
 
+    # User views.
+    @bp.route('/logout')
+    def logout():
+        logout_user()
+        return redirect(url_for('users.login'))
+
+    @bp.route('/is_admin')
+    def is_admin():
+        return flask.jsonify(is_admin=_is_admin())
+
+    # Admin views.
     @bp.route('/')
     @admin_required
     def users():
         users = [user.username for user in User.query.all()]
         return flask.jsonify(users=users)
+
+    @bp.route('/add', methods=['POST'])
+    @admin_required
+    def add_user():
+        username = request.get_json()['username']
+
+        user = User(username)
+        tmp_token = user.make_tmp_token()
+        user.save()
+
+        return flask.jsonify(link=set_password_link(tmp_token))
 
     @bp.route('/delete/<username>')
     @admin_required
@@ -136,7 +143,3 @@ if project.database_uri:
         tmp_token = user.make_tmp_token()
         user.save()
         return flask.jsonify(link=set_password_link(tmp_token))
-
-    @bp.route('/is_admin')
-    def is_admin():
-        return flask.jsonify(is_admin=_is_admin())
