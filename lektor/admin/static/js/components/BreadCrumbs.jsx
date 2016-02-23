@@ -18,6 +18,7 @@ class BreadCrumbs extends RecordComponent {
     super(props);
     this.state = {
       recordPathInfo: null,
+      is_admin: false,
     };
     this._onKeyPress = this._onKeyPress.bind(this);
   }
@@ -25,6 +26,7 @@ class BreadCrumbs extends RecordComponent {
   componentDidMount() {
     super.componentDidMount();
     this.updateCrumbs();
+    this.isAdmin();
     window.addEventListener('keydown', this._onKeyPress);
   }
 
@@ -57,6 +59,15 @@ class BreadCrumbs extends RecordComponent {
           }
         });
       });
+  }
+
+  isAdmin() {
+    $.ajax('/is_admin', {
+      context: this,
+      success: function(is_admin) {
+        this.setState(is_admin);
+      }
+    });
   }
 
   _onKeyPress(event) {
@@ -102,7 +113,7 @@ class BreadCrumbs extends RecordComponent {
   }
 
   renderUsers() {
-    if (true) {  // XXX
+    if (this.state.is_admin) {
       return (
         <button className="btn btn-default" onClick={
           this._onUsers.bind(this)} title={i18n.trans('USERS')}>

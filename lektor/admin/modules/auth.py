@@ -1,5 +1,7 @@
+import functools
+
 import flask
-from flask import Blueprint, g, redirect, url_for
+from flask import Blueprint, g, redirect, url_for, current_app
 
 from lektor.project import Project
 
@@ -7,6 +9,20 @@ from lektor.project import Project
 bp = Blueprint('auth', __name__)
 
 project = Project.discover()
+
+
+def _is_admin():
+    from flask.ext.login import current_user
+    return current_user.id == 1
+
+
+def admin_required(func):
+    @functools.wraps(func)
+    def decorated_view(*args, **kwargs):
+        if not _is_admin():
+            return current_app.login_manager.unauthorized()
+        return func(*args, **kwargs)
+    return decorated_view
 
 if project.database_uri:
     @bp.record_once
@@ -69,12 +85,9 @@ if project.database_uri:
             return redirect(g.admin_context.admin_root)
 
         @app.route('/add-user', methods=['POST'])
+        @admin_required
         def add_user():
             from flask import request
-            from flask.ext.login import current_user
-
-            if current_user.id != 1:
-                return login_manager.unauthorized()
 
             username = request.get_json()['username']
 
@@ -84,6 +97,7 @@ if project.database_uri:
 
             return flask.jsonify(link=set_password_link(tmp_token))
 
+        @admin_required
         def set_password_link(tmp_token):
             return url_for('set_password', tmp_token=tmp_token, _external=True)
 
@@ -102,11 +116,13 @@ if project.database_uri:
             return flask.render_template('set_password.html', form=form)
 
         @app.route('/users')
+        @admin_required
         def users():
             users = [user.username for user in User.query.all()]
             return flask.jsonify(users=users)
 
         @app.route('/delete-user/<username>')
+        @admin_required
         def delete_user(username):
             user = User.get(username=username)
             if user.id != 1:
@@ -114,9 +130,14 @@ if project.database_uri:
             return ''
 
         @app.route('/reset-user/<username>')
+        @admin_required
         def reset_user(username):
             user = User.get(username=username)
             user.unset_password()
             tmp_token = user.make_tmp_token()
             user.save()
             return flask.jsonify(link=set_password_link(tmp_token))
+
+        @app.route('/is_admin')
+        def is_admin():
+            return flask.jsonify(is_admin=_is_admin())
