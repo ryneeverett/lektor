@@ -16,7 +16,7 @@ class AddUserPage extends Component {
       return;
     }
 
-    utils.request('/add-user', {
+    utils.request('/users/add', {
       json: {username: username},
       method: 'POST'
     }).then((resp) => {

@@ -31,7 +31,7 @@ class UsersPage extends Component {
 
   onDeleteUser(e) {
     var username = e.target.dataset.username || e.target.parentElement.dataset.username;
-    utils.request('/delete-user/' + username)
+    utils.request('/users/delete/' + username)
     .then((resp) => {
       this.refreshState();
     });
@@ -40,7 +40,7 @@ class UsersPage extends Component {
   onResetPassword(e) {
     var username = e.target.dataset.username || e.target.parentElement.dataset.username;
 
-    utils.request('/reset-user/' + username)
+    utils.request('/users/reset/' + username)
     .then((resp) => {
       this.props.history.pushState(
         null, '/admin/set-password-link', {username: username, link: resp.link, new_user: false});

@@ -62,7 +62,7 @@ class BreadCrumbs extends RecordComponent {
   }
 
   isAdmin() {
-    $.ajax('/is_admin', {
+    $.ajax('/users/is_admin', {
       context: this,
       success: function(is_admin) {
         this.setState(is_admin);
@@ -109,7 +109,7 @@ class BreadCrumbs extends RecordComponent {
   }
 
   _onLogout(e) {
-    window.location = utils.getCanonicalUrl('/logout');
+    window.location = utils.getCanonicalUrl('/users/logout');
   }
 
   renderUsers() {

@@ -6,7 +6,7 @@ from flask import Blueprint, g, redirect, url_for, current_app, request
 from lektor.project import Project
 
 
-bp = Blueprint('auth', __name__)
+bp = Blueprint('users', __name__, url_prefix='/users')
 
 project = Project.discover()
 
@@ -41,6 +41,12 @@ if project.database_uri:
         app.config['SQLALCHEMY_DATABASE_URI'] = project.database_uri
         app.config['SECRET_KEY'] = project.secret_key
 
+        @app.before_request
+        def require_authorization():
+            if not (current_user.is_authenticated or
+                    request.endpoint in ['users.login', 'users.set_password']):
+                return login_manager.unauthorized()
+
         login_manager = login.LoginManager()
         login_manager.init_app(app)
 
@@ -61,27 +67,23 @@ if project.database_uri:
             username = StringField('username')
             submit = SubmitField('submit')
 
-        @app.before_request
-        def require_authorization():
-            if not (current_user.is_authenticated or
-                    request.endpoint in ['login', 'set_password']):
-                return login_manager.unauthorized()
-
-        @app.route('/login', methods=['GET', 'POST'])
+        @bp.route('/login', methods=['GET', 'POST'])
         def login():
             form = LoginForm()
             if form.validate_on_submit():
                 logged_in = login_user(User.get(username=form.username.data))
                 return (redirect(g.admin_context.admin_root)
-                        if logged_in else redirect(url_for('login')))
+                        if logged_in else redirect(url_for('users.login')))
+            else:
+                logout_user()
             return flask.render_template('login.html', form=form)
 
-        @app.route('/logout')
+        @bp.route('/logout')
         def logout():
             logout_user()
-            return redirect(g.admin_context.admin_root)
+            return redirect(url_for('users.login'))
 
-        @app.route('/add-user', methods=['POST'])
+        @bp.route('/add', methods=['POST'])
         @admin_required
         def add_user():
             username = request.get_json()['username']
@@ -92,11 +94,11 @@ if project.database_uri:
 
             return flask.jsonify(link=set_password_link(tmp_token))
 
-        @admin_required
         def set_password_link(tmp_token):
-            return url_for('set_password', tmp_token=tmp_token, _external=True)
+            return url_for(
+                'users.set_password', tmp_token=tmp_token, _external=True)
 
-        @app.route('/set_password/<tmp_token>', methods=['GET', 'POST'])
+        @bp.route('/set_password/<tmp_token>', methods=['GET', 'POST'])
         def set_password(tmp_token):
             user = User.get(tmp_token=tmp_token)
 
@@ -107,16 +109,16 @@ if project.database_uri:
             if form.is_submitted() and form.username.data == user.username:
                 user.set_password(form.password.data)
                 user.save()
-                return redirect(url_for('login'))
+                return redirect(url_for('users.login'))
             return flask.render_template('set_password.html', form=form)
 
-        @app.route('/users')
+        @bp.route('/')
         @admin_required
         def users():
             users = [user.username for user in User.query.all()]
             return flask.jsonify(users=users)
 
-        @app.route('/delete-user/<username>')
+        @bp.route('/delete/<username>')
         @admin_required
         def delete_user(username):
             user = User.get(username=username)
@@ -124,7 +126,7 @@ if project.database_uri:
                 user.delete()
             return ''
 
-        @app.route('/reset-user/<username>')
+        @bp.route('/reset/<username>')
         @admin_required
         def reset_user(username):
             user = User.get(username=username)
@@ -133,6 +135,6 @@ if project.database_uri:
             user.save()
             return flask.jsonify(link=set_password_link(tmp_token))
 
-        @app.route('/is_admin')
+        @bp.route('/is_admin')
         def is_admin():
             return flask.jsonify(is_admin=_is_admin())
