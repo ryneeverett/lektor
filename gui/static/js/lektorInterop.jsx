@@ -89,7 +89,7 @@ class LektorServer {
   }
 
   getUrl() {
-    return 'http://' + this.options.host + ':' + this.options.port + '/';
+    return 'http://localhost:' + this.options.port + '/';
   }
 
   getAdminUrl() {
