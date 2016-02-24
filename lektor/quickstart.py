@@ -44,7 +44,7 @@ class Generator(object):
         click.echo('Error: %s' % message, err=True)
         raise click.Abort()
 
-    def prompt(self, text, default=None, info=None):
+    def prompt(self, text, default=None, info=None, **kwargs):
         self.question += 1
         self.e('')
         self.e('Step %d:' % self.question, fg='yellow')
@@ -55,7 +55,8 @@ class Generator(object):
         if default is True or default is False:
             rv = click.confirm(text, default=default)
         else:
-            rv = click.prompt(text, default=default, show_default=True)
+            rv = click.prompt(
+                text, default=default, show_default=True, **kwargs)
         return rv
 
     def title(self, title):
@@ -202,7 +203,7 @@ def project_quickstart(defaults=None):
         database_uri = g.prompt('Database URI', default_db_uri)
 
         username = g.prompt('Admin Username')
-        password = g.prompt('Admin Password')
+        password = g.prompt('Admin Password', hide_input=True)
 
     g.confirm('That\'s all. Create project?')
 
