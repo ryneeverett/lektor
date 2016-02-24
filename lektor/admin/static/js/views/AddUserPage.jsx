@@ -21,7 +21,7 @@ class AddUserPage extends Component {
       method: 'POST'
     }).then((resp) => {
       this.props.history.pushState(
-        null, '/admin/set-password-link', {username: username, link: resp.link, new_user: true});
+        null, '/admin/users/set-password-link', {username: username, link: resp.link, new_user: true});
     });
 
   }

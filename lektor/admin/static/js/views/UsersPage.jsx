@@ -48,7 +48,7 @@ class UsersPage extends Component {
       method: 'POST'
     }).then((resp) => {
       this.props.history.pushState(
-        null, '/admin/set-password-link', {username: username, link: resp.link, new_user: false});
+        null, '/admin/users/set-password-link', {username: username, link: resp.link, new_user: false});
     });
   }
 
@@ -83,7 +83,7 @@ class UsersPage extends Component {
     return (
       <div>
         <h1>Users</h1>
-        <Link to="/admin/add-user">
+        <Link to="/admin/users/add-user">
           <span className="fa fa-user-plus fa-fw"></span>Add a user
         </Link>
         {this.renderUsers()}
