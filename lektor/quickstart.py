@@ -198,8 +198,7 @@ def project_quickstart(defaults=None):
         ' store users. Note: you must have the optional "webadmin" '
         'dependencies installed, i.e., `pip install lektor[webadmin]`.')
     if with_database:
-        default_db_path = os.path.abspath(os.path.join(path, 'lektor.db'))
-        default_db_uri = 'sqlite:///' + default_db_path
+        default_db_uri = 'sqlite:///lektor.db'
         database_uri = g.prompt('Database URI', default_db_uri)
 
         username = g.prompt('Admin Username')
@@ -224,7 +223,7 @@ def project_quickstart(defaults=None):
         env = LektorEnvironment(project, load_plugins=False)
 
         app = WebAdmin(env, output_path=path)
-        app.config['SQLALCHEMY_DATABASE_URI'] = database_uri
+        app.config['SQLALCHEMY_DATABASE_URI'] = project.database_uri
 
         with app.app_context():
             from lektor.admin.models import db, User

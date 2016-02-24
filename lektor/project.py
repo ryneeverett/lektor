@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import hashlib
 from inifile import IniFile
@@ -138,7 +139,12 @@ class Project(object):
     @cached_property
     def database_uri(self):
         config = self.open_config()
-        return config.get('project.database_uri', '')
+        database_uri = config.get('project.database_uri', '')
+        # project-relative path -> absolute path
+        return re.sub(
+            '(?<=^sqlite:///)(?P<path>[^/].*)',
+            os.path.join(self.tree, '\g<path>'),
+            database_uri)
 
     @cached_property
     def secret_key(self):
