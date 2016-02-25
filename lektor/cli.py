@@ -570,9 +570,10 @@ def quickstart_cmd(ctx, **options):
 def createdb(ctx, silent, username, password):
     project = ctx.get_project()
     if not silent:
-        project.database_uri = click.prompt(
+        project['project.database_uri'] = click.prompt(
             'Database URI', project.database_uri or 'sqlite:///lektor.db')
-    project.secret_key = project.secret_key or binascii.hexlify(os.urandom(24))
+    if not project.secret_key:
+        project['project.secret_key'] = binascii.hexlify(os.urandom(24))
 
     app = WebAdmin(ctx.get_env(), output_path=project.tree)
     app.config['SQLALCHEMY_DATABASE_URI'] = project.database_uri
