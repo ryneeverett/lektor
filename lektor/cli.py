@@ -558,17 +558,21 @@ def quickstart_cmd(ctx, **options):
     project_quickstart(options)
 
 
-@cli.command('createdb',
-             short_help='Initialize database and require user authentication.')
+@cli.command('createdb', help=(
+    'Initialize database and require user authentication. Note: you must ' +
+    'have the optional "webadmin" dependencies installed, i.e., `pip ' +
+    'install lektor[webadmin]`.'))
+@click.option('--silent', is_flag=True,
+              help='Username and password must be passed as arguments.')
+@click.option('--username', help='Admin Username', prompt=True)
+@click.password_option(help='Admin Password')
 @pass_context
-def createdb(ctx):
-    click.echo(
-        'Note: you must have the optional "webadmin" dependencies installed,' +
-        ' i.e., `pip install lektor[webadmin]`.')
-
+def createdb(ctx, silent, username, password):
     project = ctx.get_project()
-    project.database_uri = click.prompt(
-        'Database URI', project.database_uri or 'sqlite:///lektor.db')
+    project.database_uri = (
+        project.database_uri if silent else
+        click.prompt(
+            'Database URI', project.database_uri or 'sqlite:///lektor.db'))
     project.secret_key = project.secret_key or binascii.hexlify(os.urandom(24))
 
     app = WebAdmin(ctx.get_env(), output_path=project.tree)
@@ -578,8 +582,8 @@ def createdb(ctx):
         from lektor.admin.models import db, User
 
         db.create_all()
-        user = User(click.prompt('Admin Username'))
-        user.set_password(click.prompt('Admin Password', hide_input=True))
+        user = User(username)
+        user.set_password(password)
         user.save()
 
 
