@@ -177,8 +177,8 @@ def webui_secure(request, env, pad):
     shutil.move(old_proj, relpath('old_proj.bak'))
     shutil.copyfile(relpath('secure.lektorproject'), old_proj)
     subprocess.call(
-        ['lektor', 'createdb', '--silent', '--username', 'lektor',
-         '--password', 'lektor'], cwd=env.root_path)
+        ['lektor', 'createdb', '--silent', '--username', 'admin',
+         '--password', 'admin'], cwd=env.root_path)
 
     from lektor.admin.webui import WebUI
     output_path = tempfile.mkdtemp()
