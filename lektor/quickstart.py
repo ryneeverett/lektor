@@ -3,7 +3,6 @@ import re
 import uuid
 import click
 import shutil
-import binascii
 import tempfile
 import subprocess
 from datetime import datetime
@@ -11,9 +10,6 @@ from functools import partial
 from contextlib import contextmanager
 from jinja2 import Environment, PackageLoader
 
-from .admin import WebAdmin
-from .environment import Environment as LektorEnvironment
-from .project import Project
 from .utils import slugify, fs_enc
 
 
@@ -44,7 +40,7 @@ class Generator(object):
         click.echo('Error: %s' % message, err=True)
         raise click.Abort()
 
-    def prompt(self, text, default=None, info=None, **kwargs):
+    def prompt(self, text, default=None, info=None):
         self.question += 1
         self.e('')
         self.e('Step %d:' % self.question, fg='yellow')
@@ -55,8 +51,7 @@ class Generator(object):
         if default is True or default is False:
             rv = click.confirm(text, default=default)
         else:
-            rv = click.prompt(
-                text, default=default, show_default=True, **kwargs)
+            rv = click.prompt(text, default=default, show_default=True)
         return rv
 
     def title(self, title):
@@ -194,17 +189,6 @@ def project_quickstart(defaults=None):
         'Your name.  This is used in a few places in the default template '
         'to refer to in the default copyright messages.')
 
-    with_database = g.prompt('Database', False,
-        'If deploying your admin panel to the web, you will need a database to'
-        ' store users. Note: you must have the optional "webadmin" '
-        'dependencies installed, i.e., `pip install lektor[webadmin]`.')
-    if with_database:
-        default_db_uri = 'sqlite:///lektor.db'
-        database_uri = g.prompt('Database URI', default_db_uri)
-
-        username = g.prompt('Admin Username')
-        password = g.prompt('Admin Password', hide_input=True)
-
     g.confirm('That\'s all. Create project?')
 
     g.run({
@@ -215,24 +199,7 @@ def project_quickstart(defaults=None):
         'this_year': datetime.utcnow().year,
         'today': datetime.utcnow().strftime('%Y-%m-%d'),
         'author_name': author_name,
-        'database_uri': database_uri if with_database else '',
-        'secret_key': binascii.hexlify(os.urandom(24)),
     }, path)
-
-    if with_database:
-        project = Project.from_path(path)
-        env = LektorEnvironment(project, load_plugins=False)
-
-        app = WebAdmin(env, output_path=path)
-        app.config['SQLALCHEMY_DATABASE_URI'] = project.database_uri
-
-        with app.app_context():
-            from lektor.admin.models import db, User
-
-            db.create_all()
-            user = User(username)
-            user.set_password(password)
-            user.save()
 
 
 def plugin_quickstart(defaults=None, project=None):

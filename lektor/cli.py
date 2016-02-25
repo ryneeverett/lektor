@@ -3,8 +3,10 @@ import sys
 import json
 import time
 import click
+import binascii
 import pkg_resources
 
+from .admin import WebAdmin
 from .i18n import get_default_lang, is_valid_language
 from .utils import secure_url
 from .project import Project
@@ -554,6 +556,31 @@ def quickstart_cmd(ctx, **options):
     """Starts a new empty project with a minimum boilerplate."""
     from lektor.quickstart import project_quickstart
     project_quickstart(options)
+
+
+@cli.command('createdb',
+             short_help='Initialize database and require user authentication.')
+@pass_context
+def createdb(ctx):
+    click.echo(
+        'Note: you must have the optional "webadmin" dependencies installed,' +
+        ' i.e., `pip install lektor[webadmin]`.')
+
+    project = ctx.get_project()
+    project.database_uri = click.prompt(
+        'Database URI', project.database_uri or 'sqlite:///lektor.db')
+    project.secret_key = project.secret_key or binascii.hexlify(os.urandom(24))
+
+    app = WebAdmin(ctx.get_env(), output_path=project.tree)
+    app.config['SQLALCHEMY_DATABASE_URI'] = project.database_uri
+
+    with app.app_context():
+        from lektor.admin.models import db, User
+
+        db.create_all()
+        user = User(click.prompt('Admin Username'))
+        user.set_password(click.prompt('Admin Password', hide_input=True))
+        user.save()
 
 
 from .devcli import cli as devcli

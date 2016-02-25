@@ -2,6 +2,7 @@ import os
 import re
 import sys
 import hashlib
+import fileinput
 from inifile import IniFile
 from werkzeug.utils import cached_property
 
@@ -20,6 +21,44 @@ class Project(object):
         if self.project_file is None:
             raise RuntimeError('This project has no project file.')
         return IniFile(self.project_file)
+
+    def set_config(self, section, key, value):
+        # TODO Add setter capability to Inifile and purge this hack.
+        new_config = key + ' = ' + value
+        done = False
+
+        # Try to overwrite the key if it exists already.
+        for line in fileinput.input(self.project_file, inplace=1):
+            line = line.strip()
+            if line.startswith(key):
+                print new_config
+                done = True
+            else:
+                print line
+
+        # If key doesn't exist yet, add to the appropriate section.
+        if not done:
+            in_section = False
+            for line in fileinput.input(self.project_file, inplace=1):
+                line = line.strip()
+                if done:
+                    pass
+                elif in_section:
+                    if line.startswith('['):
+                        print new_config
+                        done = True
+                else:
+                    in_section = line == '[' + section + ']'
+                print line
+
+            if in_section and not done:
+                with open(self.project_file, 'a') as config:
+                    config.write(new_config)
+                    done = True
+
+        # If the key still hasn't been written we have a problem.
+        if not done:
+            raise Exception('set_config has a bug broken')
 
     @classmethod
     def from_file(cls, filename):
@@ -136,7 +175,7 @@ class Project(object):
         config = self.open_config()
         return list(comma_delimited(config.get('project.included_assets', '')))
 
-    @cached_property
+    @property
     def database_uri(self):
         config = self.open_config()
         database_uri = config.get('project.database_uri', '')
@@ -146,10 +185,18 @@ class Project(object):
             os.path.join(self.tree, '\g<path>'),
             database_uri)
 
-    @cached_property
+    @database_uri.setter
+    def database_uri(self, value):
+        self.set_config('project', 'database_uri', value)
+
+    @property
     def secret_key(self):
         config = self.open_config()
         return config.get('project.secret_key', '')
+
+    @secret_key.setter
+    def secret_key(self, value):
+        self.set_config('project', 'secret_key', value)
 
     def to_json(self):
         return {
