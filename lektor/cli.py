@@ -569,10 +569,9 @@ def quickstart_cmd(ctx, **options):
 @pass_context
 def createdb(ctx, silent, username, password):
     project = ctx.get_project()
-    project.database_uri = (
-        project.database_uri if silent else
-        click.prompt(
-            'Database URI', project.database_uri or 'sqlite:///lektor.db'))
+    if not silent:
+        project.database_uri = click.prompt(
+            'Database URI', project.database_uri or 'sqlite:///lektor.db')
     project.secret_key = project.secret_key or binascii.hexlify(os.urandom(24))
 
     app = WebAdmin(ctx.get_env(), output_path=project.tree)
