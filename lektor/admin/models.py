@@ -15,6 +15,18 @@ class User(db.Model, UserMixin):
     def __init__(self, username):
         self.username = username
 
+    @classmethod
+    def get(cls, **kwargs):
+        return cls.query.filter_by(**kwargs).first()
+
+    def save(self):
+        db.session.add(self)
+        db.session.commit()
+
+    def delete(self):
+        db.session.delete(self)
+        db.session.commit()
+
     def set_password(self, password):
         self.tmp_token = ''
         self.pw_hash = generate_password_hash(password)
@@ -26,18 +38,6 @@ class User(db.Model, UserMixin):
         return check_password_hash(
             self.pw_hash, password) if self.pw_hash else False
 
-    @classmethod
-    def get(cls, **kwargs):
-        return cls.query.filter_by(**kwargs).first()
-
     def make_tmp_token(self):
         self.tmp_token = make_secure_token(self.username)
         return self.tmp_token
-
-    def save(self):
-        db.session.add(self)
-        db.session.commit()
-
-    def delete(self):
-        db.session.delete(self)
-        db.session.commit()

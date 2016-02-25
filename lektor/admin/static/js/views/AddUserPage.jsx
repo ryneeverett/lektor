@@ -4,7 +4,6 @@ var React = require('react');
 var Router = require('react-router');
 
 var Component = require('../components/Component');
-
 var utils = require('../utils');
 
 class AddUserPage extends Component {

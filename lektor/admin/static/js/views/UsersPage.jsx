@@ -5,7 +5,6 @@ var Router = require('react-router');
 
 var Component = require('../components/Component');
 var Link = require('../components/Link');
-
 var utils = require('../utils');
 
 class UsersPage extends Component {
