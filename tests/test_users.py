@@ -15,7 +15,7 @@ def test_secure(webui_secure):
             '/users/login', data={'username': username, 'password': password})
 
     def is_admin():
-        return json.loads(app.get('/users/is_admin').data)['is_admin']
+        return json.loads(app.get('/users/is-admin').data)['is_admin']
 
     def get_users():
         return json.loads(app.get('/users/').data)['users']

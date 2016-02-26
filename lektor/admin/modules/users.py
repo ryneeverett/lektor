@@ -100,7 +100,7 @@ def init(state):
             logout_user()
             return redirect(url_for('users.login'))
 
-        @bp.route('/is_admin')
+        @bp.route('/is-admin')
         def is_admin():
             return flask.jsonify(is_admin=_is_admin())
 

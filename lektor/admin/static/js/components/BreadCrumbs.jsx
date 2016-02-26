@@ -62,7 +62,7 @@ class BreadCrumbs extends RecordComponent {
   }
 
   isAdmin() {
-    $.ajax('/users/is_admin', {
+    $.ajax('/users/is-admin', {
       context: this,
       success: function(is_admin) {
         this.setState(is_admin);
