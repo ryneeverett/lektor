@@ -17,6 +17,9 @@ def test_secure(webui_secure):
     def is_admin():
         return json.loads(app.get('/users/is_admin').data)['is_admin']
 
+    def get_users():
+        return json.loads(app.get('/users/').data)['users']
+
     # Unauthenticated
     assert app.get('/admin/').status_code == 401
 
@@ -29,13 +32,16 @@ def test_secure(webui_secure):
 
     assert is_admin() is True
 
+    assert get_users() == ['admin']
+
     user = app.post(
         '/users/add',
         data=json.dumps({'username': 'user'}), content_type='application/json')
     set_password = json.loads(user.data)['link']
 
+    assert get_users() == ['admin', 'user']
+
     app.get('/users/logout')
-    assert app.get('/admin/').status_code == 401
 
     # User
     app.post(set_password, data={'username': 'user', 'password': 'user'})
@@ -46,3 +52,17 @@ def test_secure(webui_secure):
     assert app.get('/users/').status_code == 401
 
     assert is_admin() is False
+
+    app.get('/users/logout')
+
+    # Delete User
+
+    assert login('admin', 'admin').status_code == 302
+
+    assert get_users() == ['admin', 'user']
+
+    app.post(
+        '/users/delete',
+        data=json.dumps({'username': 'user'}), content_type='application/json')
+
+    assert get_users() == ['admin']
