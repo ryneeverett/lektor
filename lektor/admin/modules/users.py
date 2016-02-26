@@ -66,10 +66,6 @@ def init(state):
                 user = User.get(username=self.username.data)
                 return user and user.check_password(self.password.data)
 
-        class NewUserForm(Form):
-            username = StringField('username')
-            submit = SubmitField('submit')
-
         # Public views.
         @bp.route('/login', methods=['GET', 'POST'])
         def login():
