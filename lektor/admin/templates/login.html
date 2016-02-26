@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 
 {% block body %}
-<h1>Log In</h1>
-<form id="login" method="POST" action="">
+<h1>{{ title }}</h1>
+<form method="POST">
   {{ form.csrf_token }}
   <p>Username {{ form.username }}</p>
   <p>Password {{ form.password }}</p>

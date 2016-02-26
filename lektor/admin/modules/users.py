@@ -80,7 +80,8 @@ def init(state):
                         if logged_in else redirect(url_for('users.login')))
             else:
                 logout_user()
-            return flask.render_template('login.html', form=form)
+            return flask.render_template(
+                'login.html', form=form, title='Log In')
 
         @bp.route('/set_password/<tmp_token>', methods=['GET', 'POST'])
         def set_password(tmp_token):
@@ -94,7 +95,8 @@ def init(state):
                 user.set_password(form.password.data)
                 user.save()
                 return redirect(url_for('users.login'))
-            return flask.render_template('set_password.html', form=form)
+            return flask.render_template(
+                'login.html', form=form, title='Set Password')
 
         # User views.
         @bp.route('/logout')
